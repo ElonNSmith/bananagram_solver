@@ -12,7 +12,7 @@ class Tile:
         self.populate_wordlist()
 
     def populate_wordlist(self):
-        with open('scrabble dictionary.txt') as dictionary:
+        with open('scrabdict.txt') as dictionary:
             for word in dictionary:
                 word = word.rstrip()
                 charstring_copy =  list(self.charstring).copy()
@@ -46,13 +46,32 @@ class Tile:
                         index2 = string2.find(character2)
                         yield string1[:index1]+string1[index1+1:]+string2[:index2]+string2[index2+1:]
 
+    # also removes letters adjacent to the one that intersects
+    def intersecting_string_3(self, string1:str, string2:str, permitted_intersections:str):
+        for character1 in string1:
+            for character2 in string2:
+                if character1 == character2:
+                    if character1 in permitted_intersections:
+                        index1s = string1.find(character1) -1
+                        index2s = string2.find(character2) -1
+                        index1e = index1s + 3
+                        index2e = index2s + 3
+                        if index1s < 0 :
+                            index1s = 0
+                        if index2s < 0 :
+                            index2s = 0
+                        if index1e > len(string1):
+                            index1e = len(string1)
+                        if index2e > len(string2):
+                            index2e = len(string2)
+                        yield string1[:index1s]+string1[index1e:]+string2[:index2s]+string2[index2e:]
 
     #despite it's name the set of words will be returned as a generator object (multiples allowed)
     #every characyer in characters_free represents an unused tile
     #every charecter in characters_available represents characters in words_already that can be built off` 
     def generate_possible_word_sets(self,characters_free:str,characters_available:str, words_already:list):
         if characters_free == '':
-            words_already.sort()
+            #words_already.sort()
             yield  words_already
         words_already_copy = words_already.copy()
         for word in self.wordlist:
@@ -69,7 +88,7 @@ class Tile:
                 outlist = words_already.copy()
                 outlist.append(word)
                 #recursion here, watch out
-                for intersection in self.intersecting_string_2(characters_available,word,permitted_intersections):
+                for intersection in self.intersecting_string_3(characters_available,word,permitted_intersections):
                     yield from self.generate_possible_word_sets(''.join(characters_free_copy),intersection,outlist)
 
     def get_word_sets(self):
@@ -95,5 +114,5 @@ if __name__ == '__main__':
     for b in d.get_word_sets():
         print(b)
     c = Tile('AOEGEUIDoiapnia')
-    for b in c.get_ordered_set_of_word_sets():
+    for b in c.get_word_sets():
         print(b)
